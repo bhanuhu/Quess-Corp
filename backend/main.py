@@ -8,7 +8,6 @@ from mongodb import DatabaseOperations, Employee, Attendance, init_db
 
 app = FastAPI(title="HRMS Lite API", version="1.0.0")
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -28,7 +27,6 @@ async def startup_event():
 # Employee endpoints
 @app.get("/employees", response_model=List[schemas.Employee])
 async def get_employees():
-    """Get all employees"""
     employees = await DatabaseOperations.get_all_employees()
     return [schemas.Employee(
         id=emp.id,
@@ -40,7 +38,6 @@ async def get_employees():
 
 @app.get("/employees/{employee_id}", response_model=schemas.Employee)
 async def get_employee(employee_id: str):
-    """Get a specific employee by ID"""
     employee = await DatabaseOperations.get_employee_by_id(employee_id)
     if not employee:
         raise HTTPException(
@@ -57,8 +54,6 @@ async def get_employee(employee_id: str):
 
 @app.post("/employees", response_model=schemas.Employee, status_code=status.HTTP_201_CREATED)
 async def create_employee(employee: schemas.EmployeeCreate):
-    """Create a new employee"""
-    # Check if employee ID already exists
     existing_employee = await DatabaseOperations.get_employee_by_employee_id(employee.employeeId)
     if existing_employee:
         raise HTTPException(
@@ -93,7 +88,6 @@ async def create_employee(employee: schemas.EmployeeCreate):
 
 @app.delete("/employees/{employee_id}")
 async def delete_employee(employee_id: str):
-    """Delete an employee"""
     employee = await DatabaseOperations.get_employee_by_id(employee_id)
     if not employee:
         raise HTTPException(
@@ -113,8 +107,6 @@ async def delete_employee(employee_id: str):
 # Attendance endpoints
 @app.post("/attendance", response_model=schemas.Attendance, status_code=status.HTTP_201_CREATED)
 async def mark_attendance(attendance: schemas.AttendanceCreate):
-    """Mark attendance for an employee"""
-    # Check if employee exists
     employee = await DatabaseOperations.get_employee_by_id(attendance.employeeId)
     if not employee:
         raise HTTPException(
@@ -146,8 +138,6 @@ async def mark_attendance(attendance: schemas.AttendanceCreate):
 
 @app.get("/attendance/employee/{employee_id}", response_model=List[schemas.Attendance])
 async def get_employee_attendance(employee_id: str):
-    """Get attendance records for a specific employee"""
-    # Check if employee exists
     employee = await DatabaseOperations.get_employee_by_id(employee_id)
     if not employee:
         raise HTTPException(
@@ -165,7 +155,6 @@ async def get_employee_attendance(employee_id: str):
 
 @app.get("/attendance", response_model=List[schemas.AttendanceResponse])
 async def get_all_attendance():
-    """Get all attendance records"""
     attendance_records = await DatabaseOperations.get_all_attendance()
     return [schemas.AttendanceResponse(**record) for record in attendance_records]
 

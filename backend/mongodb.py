@@ -22,7 +22,6 @@ attendance_collection = database["attendance"]
 
 # Create indexes for better performance
 async def create_indexes():
-    """Create indexes for collections"""
     await employees_collection.create_index("employeeId", unique=True)
     await employees_collection.create_index("email", unique=True)
     await attendance_collection.create_index([("employeeId", ASCENDING), ("date", ASCENDING)], unique=True)
@@ -81,14 +80,12 @@ class Attendance:
 class DatabaseOperations:
     @staticmethod
     async def create_employee(employee: Employee) -> Employee:
-        """Create a new employee"""
         result = await employees_collection.insert_one(employee.to_dict())
         employee.id = str(result.inserted_id)
         return employee
 
     @staticmethod
     async def get_all_employees() -> List[Employee]:
-        """Get all employees"""
         cursor = employees_collection.find({})
         employees = []
         async for document in cursor:
@@ -97,7 +94,6 @@ class DatabaseOperations:
 
     @staticmethod
     async def get_employee_by_id(employee_id: str) -> Optional[Employee]:
-        """Get employee by ID"""
         try:
             obj_id = ObjectId(employee_id)
             document = await employees_collection.find_one({"_id": obj_id})
@@ -109,7 +105,6 @@ class DatabaseOperations:
 
     @staticmethod
     async def get_employee_by_employee_id(employee_id: str) -> Optional[Employee]:
-        """Get employee by employeeId"""
         document = await employees_collection.find_one({"employeeId": employee_id})
         if document:
             return Employee.from_dict(document)
@@ -117,12 +112,9 @@ class DatabaseOperations:
 
     @staticmethod
     async def delete_employee(employee_id: str) -> bool:
-        """Delete employee and associated attendance records"""
         try:
             obj_id = ObjectId(employee_id)
-            # Delete employee
             employee_result = await employees_collection.delete_one({"_id": obj_id})
-            # Delete associated attendance records
             await attendance_collection.delete_many({"employeeId": employee_id})
             return employee_result.deleted_count > 0
         except:
@@ -130,14 +122,12 @@ class DatabaseOperations:
 
     @staticmethod
     async def create_attendance(attendance: Attendance) -> Attendance:
-        """Create attendance record"""
         result = await attendance_collection.insert_one(attendance.to_dict())
         attendance.id = str(result.inserted_id)
         return attendance
 
     @staticmethod
     async def get_attendance_by_employee(employee_id: str) -> List[Attendance]:
-        """Get attendance records for an employee"""
         cursor = attendance_collection.find({"employeeId": employee_id})
         attendances = []
         async for document in cursor:
@@ -146,7 +136,6 @@ class DatabaseOperations:
 
     @staticmethod
     async def get_all_attendance() -> List[dict]:
-        """Get all attendance records with employee info"""
         pipeline = [
             {
                 "$lookup": {
@@ -182,7 +171,6 @@ class DatabaseOperations:
 
     @staticmethod
     async def check_attendance_exists(employee_id: str, date: str) -> bool:
-        """Check if attendance already exists for employee and date"""
         document = await attendance_collection.find_one({
             "employeeId": employee_id,
             "date": date
@@ -191,5 +179,4 @@ class DatabaseOperations:
 
 # Initialize database
 async def init_db():
-    """Initialize database and create indexes"""
     await create_indexes()
